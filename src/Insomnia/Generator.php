@@ -1,0 +1,85 @@
+<?php
+declare(strict_types=1);
+
+namespace Fixwa\HttpClientCollectionGenerator\Insomnia;
+
+use DateTime;
+use Fixwa\HttpClientCollectionGenerator\Insomnia\Models\ApiSpec;
+use Fixwa\HttpClientCollectionGenerator\Insomnia\Models\CookieJar;
+use Fixwa\HttpClientCollectionGenerator\Insomnia\Models\Environment;
+use Fixwa\HttpClientCollectionGenerator\Insomnia\Models\Request;
+use Fixwa\HttpClientCollectionGenerator\Insomnia\Models\RequestGroup;
+use Fixwa\HttpClientCollectionGenerator\Insomnia\Models\Workspace;
+use stdClass;
+
+class Generator
+{
+    private const EXPORT_FORMAT_VERSION = 4;
+    private stdClass $json;
+    private RequestGroup $currentGroup;
+    private array $requestsGroups = [];
+    private array $requests = [];
+    private Workspace $workspace;
+
+    public function __construct()
+    {
+        $this->json = new stdClass;
+        $this->json->_type = 'export';
+        $this->json->__export_format = self::EXPORT_FORMAT_VERSION;
+        $this->json->__export_date = (new DateTime())->format(DATE_ISO8601);
+        $this->json->__export_source = __NAMESPACE__ . '.insomnia-collection-generator.2022';
+
+        $this->workspace = new Workspace(['name' => 'Meriadoc']);
+        $cookieJar = new CookieJar(['parentId' => $this->workspace->_id]);
+        $environment = new Environment(['parentId' => $this->workspace->_id]);
+
+        $this->json->resources = [];
+        $this->json->resources[] = $this->workspace;
+        $this->json->resources[] = $cookieJar;
+        $this->json->resources[] = $environment;
+    }
+
+    public function name($name): Generator
+    {
+        $apiSpec = new ApiSpec(['fileName' => $name, 'parentId' => $this->workspace->_id]);
+        array_push($this->json->resources, $apiSpec);
+        return $this;
+    }
+
+    public function group($name): Generator
+    {
+        $group = new RequestGroup(['name' => $name]);
+        array_push($this->json->resources, $group);
+
+        if (empty($this->requestsGroups)) {
+            $group->parentId = $this->workspace->_id;
+        } else {
+            $group->parentId = $this->currentGroup->_id;
+        }
+
+        $this->requestsGroups[$group->_id] = $group;
+        $this->currentGroup = $group;
+
+        return $this;
+    }
+
+    public function addRequest(array $requestData): Generator
+    {
+        $requestData = array_merge($requestData, ['parentId' => $this->currentGroup->_id]);
+        $request = new Request($requestData);
+        array_push($this->json->resources, $request);
+        $this->requests[$request->_id] = $request;
+
+        return $this;
+    }
+
+    public function generateJson($return = false)
+    {
+        $json = json_encode($this->json, JSON_PRETTY_PRINT);
+
+        if ($return) {
+            return $json;
+        }
+        echo $json;
+    }
+}
