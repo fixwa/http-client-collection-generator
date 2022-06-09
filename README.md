@@ -7,7 +7,7 @@ Currently, only INSOMNIA is supported.
 ## Installation and Usage
 
 ```
-composer require-dev fixwa/http-client-collection-generator --save
+composer require --dev fixwa/http-client-collection-generator
 ```
 
 ```
