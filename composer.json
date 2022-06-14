@@ -10,7 +10,6 @@
         }
     ],
     "require": {
-        "php": "^7.4",
         "ext-json": "*"
     },
     "require-dev": {
@@ -26,11 +25,5 @@
         "psr-4": {
             "Fixwa\\HttpClientCollectionGenerator\\Tests\\": "./tests"
         }
-    },
-    "config": {
-        "platform": {
-            "php": "7.2"
-        },
-        "sort-packages": true
     }
 }
