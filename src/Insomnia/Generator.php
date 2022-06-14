@@ -20,8 +20,12 @@ class Generator
     private array $requestsGroups = [];
     private array $requests = [];
     private Workspace $workspace;
+    private array $resources;
+    private CookieJar $cookieJar;
+    private Environment $environment;
+    private ApiSpec $apiSpec;
 
-    public function __construct()
+    public function __construct($workspaceName = "Test", $apiSpecName = "Test")
     {
         $this->json = new stdClass;
         $this->json->_type = 'export';
@@ -29,33 +33,29 @@ class Generator
         $this->json->__export_date = (new DateTime())->format(DATE_ISO8601);
         $this->json->__export_source = __NAMESPACE__ . '.insomnia-collection-generator.2022';
 
-        $this->workspace = new Workspace(['name' => 'Meriadoc']);
-        $cookieJar = new CookieJar(['parentId' => $this->workspace->_id]);
-        $environment = new Environment(['parentId' => $this->workspace->_id]);
-
-        $this->json->resources = [];
-        $this->json->resources[] = $this->workspace;
-        $this->json->resources[] = $cookieJar;
-        $this->json->resources[] = $environment;
+        $this->workspace = new Workspace(['name' => $workspaceName]);
+        $this->cookieJar = new CookieJar(['parentId' => $this->workspace->_id]);
+        $this->environment = new Environment(['parentId' => $this->workspace->_id]);
+        $this->apiSpec = new ApiSpec(['fileName' => $apiSpecName, 'parentId' => $this->workspace->_id]);
     }
 
-    public function name($name): Generator
+    public function setWorkspaceName($name)
     {
-        $apiSpec = new ApiSpec(['fileName' => $name, 'parentId' => $this->workspace->_id]);
-        array_push($this->json->resources, $apiSpec);
-        return $this;
+        $this->workspace->name = $name;
     }
+
+    public function setApiSpecName($name)
+    {
+        $this->apiSpec->fileName = $name;
+    }
+
 
     public function group($name): Generator
     {
         $group = new RequestGroup(['name' => $name]);
         array_push($this->json->resources, $group);
 
-        if (empty($this->requestsGroups)) {
-            $group->parentId = $this->workspace->_id;
-        } else {
-            $group->parentId = $this->currentGroup->_id;
-        }
+        $group->parentId = $this->workspace->_id;
 
         $this->requestsGroups[$group->_id] = $group;
         $this->currentGroup = $group;
@@ -75,6 +75,11 @@ class Generator
 
     public function generateJson($return = false)
     {
+        $this->json->resources[] = $this->workspace;
+        $this->json->resources[] = $this->cookieJar;
+        $this->json->resources[] = $this->environment;
+        $this->json->resources[] = $this->apiSpec;
+
         $json = json_encode($this->json, JSON_PRETTY_PRINT);
 
         if ($return) {
