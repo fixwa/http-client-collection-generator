@@ -32,6 +32,7 @@ class Generator
         $this->json->__export_format = self::EXPORT_FORMAT_VERSION;
         $this->json->__export_date = (new DateTime())->format(DATE_ISO8601);
         $this->json->__export_source = __NAMESPACE__ . '.insomnia-collection-generator.2022';
+        $this->json->resources = [];
 
         $this->workspace = new Workspace(['name' => $workspaceName]);
         $this->cookieJar = new CookieJar(['parentId' => $this->workspace->_id]);

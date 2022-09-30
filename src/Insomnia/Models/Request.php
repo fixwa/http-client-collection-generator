@@ -13,7 +13,7 @@ class Request extends Base
     public string $name = "";
     public string $description = "";
     public string $method = "";
-    public string $body;
+    public \stdClass $body;
     public array $parameters = [];
     public array $headers = [];
     public \stdClass $authentication;
